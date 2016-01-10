@@ -1,0 +1,35 @@
+apply plugin: 'java'
+
+version = '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+task doZip(type:Zip) {
+    from ('unzip_ota/')
+    baseName "clear"
+}
+
+task pack(type: JavaExec) {
+    main = 'com.android.signapk.SignApk'
+    classpath = files("apksigner/build/libs/apksigner-1.0.jar")
+    maxHeapSize '2048m'
+    args '-w','security/testkey.x509.pem','security/testkey.pk8','build/distributions/clear-1.0.zip','signed.zip'
+}
+
+pack.doLast {
+    println "      Sign Done: signed.zip"
+}
+
+pack.dependsOn doZip
+pack.dependsOn ":apksigner:jar"
+
+task('unpack', type: Copy) {
+    description "unpacking ..."
+    def zipFile = file('signed.zip')
+    def outputDir = file("unzip_ota")
+
+    from zipTree(zipFile)
+    into outputDir
+}

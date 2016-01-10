@@ -1,0 +1,48 @@
+apply plugin: 'java'
+
+version = '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+jar() {
+    manifest {
+        attributes 'Implementation-Title': 'Gradle Quickstart',
+                   'Implementation-Version': version,
+                   'Main-Class': 'com.android.signapk.SignApk',
+                   'JGREP_VERSION': '1.0',
+                   'BUILD_TIME': '2015.03.04'
+    }
+    from {configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }} //pack dependent jar
+}
+
+
+//${buildDir}
+task sprint(type: Exec) {
+    workingDir System.getProperty("user.dir")
+    commandLine './vendor/marvell-extension/build/build_androidtv'
+    def varList = ['MV88DE3100SDK_CONFIG' : System.getProperty("user.dir")+'/vendor/marvell-sdk/MV88DE3100_SDK/Customization_Data/configs/bg4ct.stba155.emmc.androidtv.cfg']
+    environment varList
+}
+
+task copyPoem(type: Copy) {
+  from 'vendor/marvell-extension/build/configs/sprint/config'
+  into 'vendor/marvell-extension/build/'
+}
+
+sprint.dependsOn(copyPoem)
+
+task t << {
+    String fileContents = new File('build.gradle').getText('UTF-8')
+    println fileContents
+}
+
+dependencies {
+    //compile 'org.bouncycastle:bcprov-jdk16:1.45'
+    compile project(':bouncycastle:bcpkix')
+    compile project(':bouncycastle:bcprov')
+}
+
+apply plugin: 'application'
+mainClassName = 'com.android.signapk.SignApk'
